@@ -30,25 +30,18 @@ Widget::Widget(QWidget *parent)
     notesListView->setSelectionMode(QAbstractItemView::SingleSelection);
     notesListView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    createNoteButton = new QPushButton("Create note", this);
-    deleteNoteButton = new QPushButton("Delete note", this);
-    editNoteButton   = new QPushButton("Edit note", this);
+    createNotePushButton = new QPushButton("Create note", this);
 
-    deleteNoteButton->setDisabled(true);
-    editNoteButton->setDisabled(true);
+    noteForm = new NoteFormWidget();
 
-    connect(notesListView, SIGNAL(pressed(QModelIndex)), this, SLOT(noteListItemClicked()));
     connect(notesListView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(noteInfo()));
-    connect(createNoteButton, SIGNAL(clicked(bool)), this, SLOT(createNote()));
-    connect(deleteNoteButton, SIGNAL(clicked(bool)), this, SLOT(deleteNote()));
-    connect(editNoteButton, SIGNAL(clicked(bool)), this, SLOT(editNote()));
+    connect(createNotePushButton, SIGNAL(clicked(bool)), this, SLOT(createNote()));
+    connect(noteForm, &NoteFormWidget::openMainWindow, this, &Widget::show);
 
     QVBoxLayout *notesLayout = new QVBoxLayout();
     notesLayout->addWidget(notesLabel);
     notesLayout->addWidget(notesListView);
-    notesLayout->addWidget(createNoteButton);
-    notesLayout->addWidget(deleteNoteButton);
-    notesLayout->addWidget(editNoteButton);
+    notesLayout->addWidget(createNotePushButton);
 
     //Конфигурация элементов, работающих с событиями
     eventsLabel  = new QLabel("Events");
@@ -68,25 +61,25 @@ Widget::Widget(QWidget *parent)
     eventsTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     eventsTableView->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
 
-    createEventButton = new QPushButton("Create event", this);
-    deleteEventButton = new QPushButton("Delete event", this);
-    editEventButton   = new QPushButton("Edit event", this);
+    createEventPushButton = new QPushButton("Create event", this);
+    deleteEventPushButton = new QPushButton("Delete event", this);
+    editEventPushButton   = new QPushButton("Edit event", this);
 
-    deleteEventButton->setDisabled(true);
-    editEventButton->setDisabled(true);
+    deleteEventPushButton->setDisabled(true);
+    editEventPushButton->setDisabled(true);
 
     connect(eventsTableView, SIGNAL(pressed(QModelIndex)), this, SLOT(eventTableItemClicked()));
     connect(eventsTableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(eventInfo()));
-    connect(createEventButton, SIGNAL(clicked(bool)), this, SLOT(createEvent()));
-    connect(deleteEventButton, SIGNAL(clicked(bool)), this, SLOT(deleteEvent()));
-    connect(editEventButton, SIGNAL(clicked(bool)), this, SLOT(editEvent()));
+    connect(createEventPushButton, SIGNAL(clicked(bool)), this, SLOT(createEvent()));
+    connect(deleteEventPushButton, SIGNAL(clicked(bool)), this, SLOT(deleteEvent()));
+    connect(editEventPushButton, SIGNAL(clicked(bool)), this, SLOT(editEvent()));
 
     QVBoxLayout *eventsLayout = new QVBoxLayout();
     eventsLayout->addWidget(eventsLabel);
     eventsLayout->addWidget(eventsTableView);
-    eventsLayout->addWidget(createEventButton);
-    eventsLayout->addWidget(deleteEventButton);
-    eventsLayout->addWidget(editEventButton);
+    eventsLayout->addWidget(createEventPushButton);
+    eventsLayout->addWidget(deleteEventPushButton);
+    eventsLayout->addWidget(editEventPushButton);
 
     //Layout, который собирает все основные компоненты
     QHBoxLayout *mainLayout = new QHBoxLayout();
@@ -112,145 +105,56 @@ void Widget::init()
     db.setDatabaseName("/home/stanislav/Desktop/Organizer.db");
 }
 
-void Widget::noteListItemClicked()
-{
-    deleteNoteButton->setEnabled(true);
-    editNoteButton->setEnabled(true);
-}
-
 void Widget::eventTableItemClicked()
 {
-    deleteEventButton->setEnabled(true);
-    editEventButton->setEnabled(true);
+    deleteEventPushButton->setEnabled(true);
+    editEventPushButton->setEnabled(true);
 }
 
 void Widget::createNote()
 {
-    QDialog dlg(this);
-    dlg.setWindowTitle(tr("Create note"));
+    this->setEnabled(false);
+    noteForm->show();
+//    QDialog dlg(this);
+//    dlg.setWindowTitle(tr("Create note"));
 
-    QLabel *nameLabel = new QLabel("Input note's name: ", &dlg);
-    QLineEdit *name = new QLineEdit(&dlg);
+//    QLabel *nameLabel = new QLabel("Input note's name: ", &dlg);
+//    QLineEdit *name = new QLineEdit(&dlg);
 
-    QLabel *textLabel = new QLabel("Input note's description: ", &dlg);
-    QTextEdit *text = new QTextEdit(&dlg);
+//    QLabel *textLabel = new QLabel("Input note's description: ", &dlg);
+//    QTextEdit *text = new QTextEdit(&dlg);
 
-    QDialogButtonBox *btn_box = new QDialogButtonBox(&dlg);
-    btn_box->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+//    QDialogButtonBox *btn_box = new QDialogButtonBox(&dlg);
+//    btn_box->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
-    connect(btn_box, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-    connect(btn_box, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+//    connect(btn_box, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+//    connect(btn_box, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
 
-    QVBoxLayout *layout = new QVBoxLayout();
-    layout->addWidget(nameLabel);
-    layout->addWidget(name);
-    layout->addWidget(textLabel);
-    layout->addWidget(text);
-    layout->addWidget(btn_box);
+//    QVBoxLayout *layout = new QVBoxLayout();
+//    layout->addWidget(nameLabel);
+//    layout->addWidget(name);
+//    layout->addWidget(textLabel);
+//    layout->addWidget(text);
+//    layout->addWidget(btn_box);
 
-    dlg.setLayout(layout);
+//    dlg.setLayout(layout);
 
-    // В случае, если пользователь нажал "Ok".
-    if(dlg.exec() == QDialog::Accepted)
-    {
-        if (db.open())
-        {
-            QSqlQuery query;
-            query.prepare("INSERT INTO notes(name, text) VALUES(?, ?);");
-            query.bindValue(0, name->text());
-            query.bindValue(1, text->toPlainText());
-            query.exec();
+//    // В случае, если пользователь нажал "Ok".
+//    if(dlg.exec() == QDialog::Accepted)
+//    {
+//        if (db.open())
+//        {
+//            QSqlQuery query;
+//            query.prepare("INSERT INTO notes(name, text) VALUES(?, ?);");
+//            query.bindValue(0, name->text());
+//            query.bindValue(1, text->toPlainText());
+//            query.exec();
 
-            notesList.clear();
-        }
+//            notesList.clear();
+//        }
 
-        getData();
-    }
-}
-
-void Widget::deleteNote()
-{
-    QDialog dlg(this);
-    dlg.setWindowTitle(tr("Delete note"));
-
-    QLabel *label = new QLabel("Do you really want to delete this note?", &dlg);
-
-    QDialogButtonBox *btn_box = new QDialogButtonBox(&dlg);
-    btn_box->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
-    connect(btn_box, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-    connect(btn_box, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
-
-    QVBoxLayout *layout = new QVBoxLayout();
-    layout->addWidget(label);
-    layout->addWidget(btn_box);
-
-    dlg.setLayout(layout);
-
-    // В случае, если пользователь нажал "Ok".
-    if(dlg.exec() == QDialog::Accepted)
-    {
-        if (db.open())
-        {
-            int pos = notesListView->selectionModel()->selectedRows().at(0).row();
-
-            QSqlQuery query;
-            query.prepare("DELETE FROM notes WHERE id=?");
-            query.bindValue(0, notesList.at(pos)->getId());
-            query.exec();
-
-            notesList.clear();
-        }
-
-        getData();
-    }
-}
-
-void Widget::editNote()
-{
-    QDialog dlg(this);
-    dlg.setWindowTitle(tr("Edit note"));
-
-    int pos = notesListView->selectionModel()->selectedRows().at(0).row();
-
-    QLabel *nameLabel = new QLabel("Input note's name: ", &dlg);
-    QLineEdit *name = new QLineEdit(notesList.at(pos)->getName(), &dlg);
-
-    QLabel *textLabel = new QLabel("Input note's description: ", &dlg);
-    QTextEdit *text = new QTextEdit(notesList.at(pos)->getText(), &dlg);
-
-    QDialogButtonBox *btn_box = new QDialogButtonBox(&dlg);
-    btn_box->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
-    connect(btn_box, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-    connect(btn_box, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
-
-    QVBoxLayout *layout = new QVBoxLayout();
-    layout->addWidget(nameLabel);
-    layout->addWidget(name);
-    layout->addWidget(textLabel);
-    layout->addWidget(text);
-    layout->addWidget(btn_box);
-
-    dlg.setLayout(layout);
-
-    // В случае, если пользователь нажал "Ok".
-    if(dlg.exec() == QDialog::Accepted)
-    {
-        if (db.open())
-        {
-            QSqlQuery query;
-            query.prepare("UPDATE notes SET name=?, text=? WHERE id=?");
-            query.bindValue(0, name->text());
-            query.bindValue(1, text->toPlainText());
-            query.bindValue(2, notesList.at(pos)->getId());
-            query.exec();
-
-            notesList.clear();
-        }
-
-        getData();
-    }
+//        getData();
+//    }
 }
 
 void Widget::noteInfo()

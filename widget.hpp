@@ -3,6 +3,7 @@
 
 #include "note.hpp"
 #include "event.hpp"
+#include "noteformwidget.hpp"
 
 #include <QList>
 
@@ -21,8 +22,9 @@ class Widget : public QWidget
     Q_OBJECT
 
 public:
-    Widget(QWidget *parent = 0);
+    Widget(QWidget* parent = nullptr);
     ~Widget();
+
 private:
     QSqlDatabase db;
 
@@ -30,44 +32,40 @@ private:
     QList<Event*> eventsList;
 
 
-    //Элементы, относящиеся к работе с заметками
-    QLabel *notesLabel                  = nullptr;
+    //Note's related elements
+    QLabel* notesLabel                  = nullptr;
 
-    QPushButton *createNoteButton       = nullptr;
-    QPushButton *deleteNoteButton       = nullptr;
-    QPushButton *editNoteButton         = nullptr;
+    QPushButton* createNotePushButton   = nullptr;
 
-    QListView *notesListView            = nullptr;
-    QStandardItemModel *notesListModel  = nullptr;
+    QListView* notesListView            = nullptr;
+    QStandardItemModel* notesListModel  = nullptr;
+
+    NoteFormWidget* noteForm            = nullptr;
 
 
-    //Элементы, относящиеся к работе с событиями
-    QLabel *eventsLabel                 = nullptr;
+    //Event's related elements
+    QLabel* eventsLabel                 = nullptr;
 
-    QPushButton *createEventButton      = nullptr;
-    QPushButton *deleteEventButton      = nullptr;
-    QPushButton *editEventButton        = nullptr;
+    QPushButton* createEventPushButton  = nullptr;
+    QPushButton* deleteEventPushButton  = nullptr;
+    QPushButton* editEventPushButton    = nullptr;
 
-    QTableView *eventsTableView         = nullptr;
-    QStandardItemModel *eventsModel     = nullptr;
+    QTableView* eventsTableView         = nullptr;
+    QStandardItemModel* eventsModel     = nullptr;
 
-public slots:
-    void init(); // Configuring DB connection
+    void init(); // Configuring database connection
+    void getData(); //Geting data from database and filling the models
 
-    void noteListItemClicked();
+private slots:
     void eventTableItemClicked();
 
     void createNote();
-    void deleteNote();
-    void editNote();
     void noteInfo();
 
     void createEvent();
     void deleteEvent();
     void editEvent();
     void eventInfo();
-
-    void getData();
 };
 
 #endif // WIDGET_HPP
