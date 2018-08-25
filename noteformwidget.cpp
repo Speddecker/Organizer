@@ -39,20 +39,28 @@ NoteFormWidget::NoteFormWidget(QWidget *parent)
     this->setLayout(mainLayout);
 }
 
+Note *NoteFormWidget::getNote() const
+{
+    return note;
+}
+
+void NoteFormWidget::setNote(Note *value)
+{
+    note = value;
+    nameLineEdit->setText(note->getName());
+    descriptionTextEdit->setText(note->getText());
+}
+
 void NoteFormWidget::okPushButtonClicked()
 {
-    this->hide();
     emit openMainWindow();
+    this->close();
 }
 
 void NoteFormWidget::editPushButtonClicked()
 {
-    this->hide();
-    emit openMainWindow();
 }
 
 void NoteFormWidget::deletePushButtonClicked()
 {
-    this->hide();
-    emit openMainWindow();
 }

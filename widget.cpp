@@ -1,4 +1,5 @@
 #include "widget.hpp"
+#include "noteformwidget.hpp"
 
 #include <QLabel>
 #include <QLineEdit>
@@ -36,7 +37,7 @@ Widget::Widget(QWidget *parent)
 
     connect(notesListView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(noteInfo()));
     connect(createNotePushButton, SIGNAL(clicked(bool)), this, SLOT(createNote()));
-    connect(noteForm, &NoteFormWidget::openMainWindow, this, &Widget::show);
+    connect(noteForm, SIGNAL(openMainWindow()), this, SLOT(show()));
 
     QVBoxLayout *notesLayout = new QVBoxLayout();
     notesLayout->addWidget(notesLabel);
@@ -113,83 +114,16 @@ void Widget::eventTableItemClicked()
 
 void Widget::createNote()
 {
-    this->setEnabled(false);
     noteForm->show();
-//    QDialog dlg(this);
-//    dlg.setWindowTitle(tr("Create note"));
-
-//    QLabel *nameLabel = new QLabel("Input note's name: ", &dlg);
-//    QLineEdit *name = new QLineEdit(&dlg);
-
-//    QLabel *textLabel = new QLabel("Input note's description: ", &dlg);
-//    QTextEdit *text = new QTextEdit(&dlg);
-
-//    QDialogButtonBox *btn_box = new QDialogButtonBox(&dlg);
-//    btn_box->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
-//    connect(btn_box, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-//    connect(btn_box, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
-
-//    QVBoxLayout *layout = new QVBoxLayout();
-//    layout->addWidget(nameLabel);
-//    layout->addWidget(name);
-//    layout->addWidget(textLabel);
-//    layout->addWidget(text);
-//    layout->addWidget(btn_box);
-
-//    dlg.setLayout(layout);
-
-//    // В случае, если пользователь нажал "Ok".
-//    if(dlg.exec() == QDialog::Accepted)
-//    {
-//        if (db.open())
-//        {
-//            QSqlQuery query;
-//            query.prepare("INSERT INTO notes(name, text) VALUES(?, ?);");
-//            query.bindValue(0, name->text());
-//            query.bindValue(1, text->toPlainText());
-//            query.exec();
-
-//            notesList.clear();
-//        }
-
-//        getData();
-//    }
+    this->close();
 }
 
 void Widget::noteInfo()
 {
-    QDialog dlg(this);
-    dlg.setWindowTitle(tr("Note info"));
-
     int pos = notesListView->selectionModel()->selectedRows().at(0).row();
-
-    QLabel *nameLabel = new QLabel("Note's name: ", &dlg);
-    QLineEdit *name = new QLineEdit(notesList.at(pos)->getName(), &dlg);
-    name->setReadOnly(true);
-
-    QLabel *textLabel = new QLabel("Note's description: ", &dlg);
-    QTextEdit *text = new QTextEdit(notesList.at(pos)->getText(), &dlg);
-    text->setReadOnly(true);
-
-    QDialogButtonBox *btn_box = new QDialogButtonBox(&dlg);
-    btn_box->setStandardButtons(QDialogButtonBox::Ok);
-
-    connect(btn_box, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-
-    QVBoxLayout *layout = new QVBoxLayout();
-    layout->addWidget(nameLabel);
-    layout->addWidget(name);
-    layout->addWidget(textLabel);
-    layout->addWidget(text);
-    layout->addWidget(btn_box);
-
-    dlg.setLayout(layout);
-
-    // В случае, если пользователь нажал "Ok".
-    if(dlg.exec() == QDialog::Accepted) {
-
-    }
+    noteForm->setNote(notesList.at(pos));
+    noteForm->show();
+    this->close();
 }
 
 void Widget::createEvent()

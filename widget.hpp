@@ -42,7 +42,6 @@ private:
 
     NoteFormWidget* noteForm            = nullptr;
 
-
     //Event's related elements
     QLabel* eventsLabel                 = nullptr;
 

@@ -1,6 +1,8 @@
 #ifndef NOTEFORMWIDGET_HPP
 #define NOTEFORMWIDGET_HPP
 
+#include "note.hpp"
+
 #include <QWidget>
 
 #include <QLabel>
@@ -14,8 +16,14 @@ class NoteFormWidget : public QWidget
 
 public:
     explicit NoteFormWidget(QWidget *parent = nullptr);
+    explicit NoteFormWidget(Note* note, QWidget* parent = nullptr);
+
+    Note *getNote() const;
+    void setNote(Note *value);
 
 private:
+    Note* note = nullptr;
+
     QLabel* nameLabel = nullptr;
     QLineEdit* nameLineEdit = nullptr;
 
@@ -25,6 +33,8 @@ private:
     QPushButton* okPushButton = nullptr;
     QPushButton* editPushButton = nullptr;
     QPushButton* deletePushButton = nullptr;
+
+    void initComponents();
 
 signals:
     void openMainWindow();
