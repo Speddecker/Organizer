@@ -1,26 +1,21 @@
 #include "widget.hpp"
-#include "noteformwidget.hpp"
-
-#include <QLabel>
-#include <QLineEdit>
-#include <QTextEdit>
-
-#include <QBoxLayout>
-#include <QGridLayout>
+#include "noteform.hpp"
 
 #include <QSqlQuery>
 
 #include <QDialog>
 #include <QDialogButtonBox>
-
+#include <QLineEdit>
+#include <QTextEdit>
 #include <QHeaderView>
-
-#include <QDebug>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
 {
     this->setWindowTitle("Organizer");
+    this->setMinimumSize(QSize(700, 350));
+
+    db.setDatabaseName("/home/stanislav/Desktop/Organizer.db");
 
     //Конфигурация элементов, работающих с заметками
     notesLabel  = new QLabel("Notes");
@@ -30,16 +25,14 @@ Widget::Widget(QWidget *parent)
     notesListView->setModel(notesListModel);
     notesListView->setSelectionMode(QAbstractItemView::SingleSelection);
     notesListView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    notesListView->setFixedWidth(this->width()/3);
 
     createNotePushButton = new QPushButton("Create note", this);
 
-    noteForm = new NoteFormWidget();
-
     connect(notesListView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(noteInfo()));
     connect(createNotePushButton, SIGNAL(clicked(bool)), this, SLOT(createNote()));
-    connect(noteForm, SIGNAL(openMainWindow()), this, SLOT(show()));
 
-    QVBoxLayout *notesLayout = new QVBoxLayout();
+    notesLayout = new QVBoxLayout();
     notesLayout->addWidget(notesLabel);
     notesLayout->addWidget(notesListView);
     notesLayout->addWidget(createNotePushButton);
@@ -56,11 +49,10 @@ Widget::Widget(QWidget *parent)
     eventsTableHeaders.append("Name");
     eventsModel->setHorizontalHeaderLabels(eventsTableHeaders);
     eventsTableView->setModel(eventsModel);
-    eventsTableView->setShowGrid(true);
     eventsTableView->setSelectionMode(QAbstractItemView::SingleSelection);
     eventsTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     eventsTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    eventsTableView->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    eventsTableView->horizontalHeader()->setStretchLastSection(true);
 
     createEventPushButton = new QPushButton("Create event", this);
     deleteEventPushButton = new QPushButton("Delete event", this);
@@ -75,7 +67,7 @@ Widget::Widget(QWidget *parent)
     connect(deleteEventPushButton, SIGNAL(clicked(bool)), this, SLOT(deleteEvent()));
     connect(editEventPushButton, SIGNAL(clicked(bool)), this, SLOT(editEvent()));
 
-    QVBoxLayout *eventsLayout = new QVBoxLayout();
+    eventsLayout = new QVBoxLayout();
     eventsLayout->addWidget(eventsLabel);
     eventsLayout->addWidget(eventsTableView);
     eventsLayout->addWidget(createEventPushButton);
@@ -83,14 +75,11 @@ Widget::Widget(QWidget *parent)
     eventsLayout->addWidget(editEventPushButton);
 
     //Layout, который собирает все основные компоненты
-    QHBoxLayout *mainLayout = new QHBoxLayout();
-
+    mainLayout = new QHBoxLayout();
     mainLayout->addLayout(notesLayout);
     mainLayout->addLayout(eventsLayout);
 
     this->setLayout(mainLayout);
-
-    init();
 
     getData();
 }
@@ -98,12 +87,6 @@ Widget::Widget(QWidget *parent)
 Widget::~Widget()
 {
     db.close();
-}
-
-void Widget::init()
-{
-    db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName("/home/stanislav/Desktop/Organizer.db");
 }
 
 void Widget::eventTableItemClicked()
@@ -114,16 +97,13 @@ void Widget::eventTableItemClicked()
 
 void Widget::createNote()
 {
-    noteForm->show();
+    QDialog* dlg = new NoteForm(this);
+    dlg->exec();
     this->close();
 }
 
 void Widget::noteInfo()
 {
-    int pos = notesListView->selectionModel()->selectedRows().at(0).row();
-    noteForm->setNote(notesList.at(pos));
-    noteForm->show();
-    this->close();
 }
 
 void Widget::createEvent()
@@ -186,7 +166,6 @@ void Widget::createEvent()
 
             eventsList.clear();
         }
-
         getData();
     }
 }
@@ -235,21 +214,22 @@ void Widget::editEvent()
     dlg.setWindowTitle(tr("Create event"));
 
     int pos = eventsTableView->selectionModel()->selectedRows().at(0).row();
+    Event* event = eventsList.at(pos);
 
     QLabel *nameLabel = new QLabel("Input event's name: ", &dlg);
-    QLineEdit *name = new QLineEdit(eventsList.at(pos)->getName(), &dlg);
+    QLineEdit *name = new QLineEdit(event->getName(), &dlg);
 
     QLabel *dateLabel = new QLabel("Input event's date: ", &dlg);
-    QLineEdit *date = new QLineEdit(eventsList.at(pos)->getDate(), &dlg);
+    QLineEdit *date = new QLineEdit(event->getDate(), &dlg);
 
     QLabel *timeLabel = new QLabel("Input event's time: ", &dlg);
-    QLineEdit *time = new QLineEdit(eventsList.at(pos)->getTime(), &dlg);
+    QLineEdit *time = new QLineEdit(event->getTime(), &dlg);
 
     QLabel *placeLabel = new QLabel("Input event's place: ", &dlg);
-    QLineEdit *place = new QLineEdit(eventsList.at(pos)->getPlace(), &dlg);
+    QLineEdit *place = new QLineEdit(event->getPlace(), &dlg);
 
     QLabel *textLabel = new QLabel("Input event's description: ", &dlg);
-    QTextEdit *text = new QTextEdit(eventsList.at(pos)->getText(), &dlg);
+    QTextEdit *text = new QTextEdit(event->getText(), &dlg);
 
     QDialogButtonBox *btn_box = new QDialogButtonBox(&dlg);
     btn_box->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
@@ -292,7 +272,6 @@ void Widget::editEvent()
 
             eventsList.clear();
         }
-
         getData();
     }
 }
@@ -395,4 +374,10 @@ void Widget::getData()
             i++;
         }
     }
+}
+
+void Widget::resizeEvent(QResizeEvent *)
+{
+    notesListView->setFixedWidth(this->width()/3);
+    eventsTableView->resizeRowsToContents();
 }

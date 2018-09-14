@@ -28,12 +28,12 @@ SOURCES += \
         widget.cpp \
     note.cpp \
     event.cpp \
-    noteformwidget.cpp
+    noteform.cpp
 
 HEADERS += \
         widget.hpp \
     note.hpp \
     event.hpp \
-    noteformwidget.hpp
+    noteform.hpp
 
 RESOURCES +=
